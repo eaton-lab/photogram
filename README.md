@@ -16,7 +16,7 @@ opencv?
 
 ### 1.2 by time intervals
 
-Use [ExifTool](https://exiftool.org) to extract the timestamp of photos, indentify to intervals by fitting them into gmm distribution.
+Use [ExifTool](https://exiftool.org) to extract the timestamp of photos, indentify to intervals by 1) setting manual threshold, or 2) fitting them into gmm distribution.
 
 
 ## 2. Conversion to DNG format
