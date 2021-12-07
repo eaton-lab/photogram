@@ -10,14 +10,15 @@ from argparse import ArgumentParser
 
 
 def get_options():
-    parser = ArgumentParser(usage="cluster_photos_by_time_intervals.py sample_dir1 [sample_dir2]",
+    parser = ArgumentParser(usage="cluster_photos_by_time_intervals.py -i sample_dir -o out_dir",
                             description="")
-    parser.add_argument("sample_dirs", metavar="sample_dirs", type=Path, nargs="+",
-                        help="One or more sample directories. "
-                             "Each directory contains all photos of that sample.")
+    parser.add_argument("-i", "--input", dest="sample_dir", type=Path,
+                        help="The directory that contains all photos of a sample.")
+    parser.add_argument("-o", "--output", dest="output_dir", type=Path, default=None,
+                        help="Output directory. Make clustering at the original directory if not provided. ")
     # This is just for postfix matching
     # format is not considered yet, but exiftool can automatically recognize CR3 info without designation
-    parser.add_argument("--postfix", dest="photo_postfix", default=".CR3",
+    parser.add_argument("--postfix", dest="photo_postfix", default=".DNG",
                         help="The postfix of the photo files. ")
     parser.add_argument("-r", "--rotation", dest="rotation_threshold", default=15., type=float,
                         help="By seconds. Arbitrary threshold to identify the between-rotations time interval. "
@@ -28,7 +29,6 @@ def get_options():
                         help="By seconds. Arbitrary threshold to identify the between-angles time interval. "
                              "Set to -1 for using GMM automatic identification (currently problematic). "
                              "Default: %(default)ss")
-    # parser.add_argument("--output", dest="output_dir", )
     parser.add_argument("--quiet", dest="quiet", default=False,
                         help="Quiet mode. ")
     return parser.parse_args()
@@ -129,58 +129,74 @@ def cluster(time_intervals, rotation_threshold=10, angle_threshold=1., quiet=Fal
     return interval_levels
 
 
+def cluster_photo(from_file, to_file, moving_mode):
+    if moving_mode:
+        shutil.move(from_file, to_file)
+    else:
+        shutil.copy(from_file, to_file)
+
+
 def main():
     options = get_options()
+    change_the_original = False
+    if options.output_dir is None:
+        options.output_dir = options.sample_dir
+        change_the_original = True
+        if not options.quiet:
+            sys.stdout.write("Warning: output not provided! Making changes to the original dir! \n")
     check_exiftool_availability(quiet=options.quiet)
-    for sample_dir in options.sample_dirs:
-        photo_files = list(sample_dir.glob("*" + options.photo_postfix))
-        dates_files = get_precise_dates(photo_files, quiet=options.quiet)
-        dates_files.sort(key=lambda x: x[0])  # sort dates_files increasingly
+    photo_files = list(options.sample_dir.glob("*" + options.photo_postfix))
+    if not photo_files:
+        sys.stdout.write(f"No photos matching *{options.photo_postfix} found! Check the postfix and the directory!\n")
+        sys.exit()
+    dates_files = get_precise_dates(photo_files, quiet=options.quiet)
+    dates_files.sort(key=lambda x: x[0])  # sort dates_files increasingly
 
-        # for test
-        # with open(sample_dir / "dates_files.txt", "w") as dates_output:
-        #     dates_output.writelines([str(x[0]) + "\n" for x in dates_files])
+    # for test
+    # with open(options.sample_dir / "dates_files.txt", "w") as dates_output:
+    #     dates_output.writelines([str(x[0]) + "\n" for x in dates_files])
 
-        # each element is a list for the shape requirement of sklearn.mixture.GaussianMixture
-        intervals = [[(dates_files[_go_ + 1][0] - dates_files[_go_][0]).total_seconds()]
-                     for _go_ in range(0, len(dates_files) - 1)]
+    # each element is a list for the shape requirement of sklearn.mixture.GaussianMixture
+    intervals = [[(dates_files[_go_ + 1][0] - dates_files[_go_][0]).total_seconds()]
+                 for _go_ in range(0, len(dates_files) - 1)]
 
-        # for test
-        # with open(sample_dir / "intervals.txt", "w") as interval_output:
-        #     interval_output.writelines([str(x[0]) + "\n" for x in intervals])
+    # for test
+    # with open(options.sample_dir / "intervals.txt", "w") as interval_output:
+    #     interval_output.writelines([str(x[0]) + "\n" for x in intervals])
 
-        interval_lls = cluster(
-            time_intervals=intervals,
-            rotation_threshold=options.rotation_threshold,
-            angle_threshold=options.angle_threshold,
-            quiet=options.quiet)
-        rotation_id = 1
-        angle_id = 1
-        new_rotation_p = sample_dir / ("rotation_%i" % rotation_id)
-        new_rotation_p.mkdir()
-        new_angle_p = new_rotation_p / ("angle_%i" % angle_id)
-        new_angle_p.mkdir()
-        new_photo_p = new_angle_p / dates_files[0][1].name
-        shutil.move(dates_files[0][1], new_photo_p)
-        for go_i, itv_level in enumerate(interval_lls):
-            if itv_level == 0:
-                rotation_id += 1
-                angle_id = 1
-                new_rotation_p = sample_dir / ("rotation_%i" % rotation_id)
-                new_rotation_p.mkdir()
-                new_angle_p = new_rotation_p / ("angle_%i" % angle_id)
-                new_angle_p.mkdir()
-                new_photo_p = new_angle_p / dates_files[go_i + 1][1].name
-                shutil.move(dates_files[go_i + 1][1], new_photo_p)
-            elif itv_level == 1:
-                angle_id += 1
-                new_angle_p = new_rotation_p / ("angle_%i" % angle_id)
-                new_angle_p.mkdir()
-                new_photo_p = new_angle_p / dates_files[go_i + 1][1].name
-                shutil.move(dates_files[go_i + 1][1], new_photo_p)
-            elif itv_level == 2:
-                new_photo_p = new_angle_p / dates_files[go_i + 1][1].name
-                shutil.move(dates_files[go_i + 1][1], new_photo_p)
+    interval_lls = cluster(
+        time_intervals=intervals,
+        rotation_threshold=options.rotation_threshold,
+        angle_threshold=options.angle_threshold,
+        quiet=options.quiet)
+    rotation_id = 1
+    angle_id = 1
+    options.output_dir.mkdir(exist_ok=True)
+    new_rotation_p = options.output_dir / ("rotation_%i" % rotation_id)
+    new_rotation_p.mkdir()
+    new_angle_p = new_rotation_p / ("angle_%i" % angle_id)
+    new_angle_p.mkdir()
+    new_photo_p = new_angle_p / dates_files[0][1].name
+    cluster_photo(dates_files[0][1], new_photo_p, moving_mode=change_the_original)
+    for go_i, itv_level in enumerate(interval_lls):
+        if itv_level == 0:
+            rotation_id += 1
+            angle_id = 1
+            new_rotation_p = options.output_dir / ("rotation_%i" % rotation_id)
+            new_rotation_p.mkdir()
+            new_angle_p = new_rotation_p / ("angle_%i" % angle_id)
+            new_angle_p.mkdir()
+            new_photo_p = new_angle_p / dates_files[go_i + 1][1].name
+            cluster_photo(dates_files[go_i + 1][1], new_photo_p, moving_mode=change_the_original)
+        elif itv_level == 1:
+            angle_id += 1
+            new_angle_p = new_rotation_p / ("angle_%i" % angle_id)
+            new_angle_p.mkdir()
+            new_photo_p = new_angle_p / dates_files[go_i + 1][1].name
+            cluster_photo(dates_files[go_i + 1][1], new_photo_p, moving_mode=change_the_original)
+        elif itv_level == 2:
+            new_photo_p = new_angle_p / dates_files[go_i + 1][1].name
+            cluster_photo(dates_files[go_i + 1][1], new_photo_p, moving_mode=change_the_original)
 
 
 if __name__ == '__main__':
