@@ -3,23 +3,7 @@
 photogrammetry pipeline
 
 
-## 1. Cluster and organize photos 
-
-### 1.1 by angle-rotation
-
-- https://towardsdatascience.com/how-to-cluster-images-based-on-visual-similarity-cd6e7209fe34
-- https://keras.io/examples/vision/semantic_image_clustering/
-```bash
-# python script using opencv
-opencv?
-```
-
-### 1.2 by time intervals
-
-Use [ExifTool](https://exiftool.org) to extract the timestamp of photos, indentify to intervals by 1) setting manual threshold, or 2) fitting them into gmm distribution.
-
-
-## 2. Conversion to DNG format
+## 1. Conversion to DNG format
 Convert all files to the widely used DNG raw photo format.
 ```bash
 cd photogram/
@@ -29,7 +13,7 @@ done
 ````
 
 
-## 3. Apply color calibration to photos
+## 2. Apply color calibration to photos
 The X-rite color palette is supported in darktable. 
 - https://docs.darktable.org/usermanual/3.6/module-reference/processing-modules/color-calibration/#supported-color-checker-targets
 This states "If the lighting conditions are peculiar and far 
@@ -41,6 +25,21 @@ an ad-hoc profile for pictures taken in the same lighting conditions."
 ```bash
 darktable-cli ...
 ````
+
+## 3. Cluster and organize photos 
+
+### 3.1 by angle-rotation
+
+- https://towardsdatascience.com/how-to-cluster-images-based-on-visual-similarity-cd6e7209fe34
+- https://keras.io/examples/vision/semantic_image_clustering/
+```bash
+# python script using opencv
+opencv?
+```
+
+### 3.2 by time intervals
+
+Use [ExifTool](https://exiftool.org) to extract the timestamp of photos, indentify to intervals by 1) setting manual threshold, or 2) fitting them into gmm distribution.
 
 
 ### SOFTWARE
