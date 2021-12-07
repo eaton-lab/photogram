@@ -3,7 +3,6 @@
 photogrammetry pipeline
 
 
-
 ## 1. Conversion to DNG format
 Convert all files to the widely used DNG raw photo format.
 ```bash
@@ -27,7 +26,9 @@ an ad-hoc profile for pictures taken in the same lighting conditions."
 darktable-cli ...
 ````
 
-## 3. Cluster and organize photos by angle-rotation
+## 3. Cluster and organize photos 
+
+### 3.1 by angle-rotation
 
 - https://towardsdatascience.com/how-to-cluster-images-based-on-visual-similarity-cd6e7209fe34
 - https://keras.io/examples/vision/semantic_image_clustering/
@@ -36,6 +37,9 @@ darktable-cli ...
 opencv?
 ```
 
+### 3.2 by time intervals
+
+Use [ExifTool](https://exiftool.org) to extract the timestamp of photos, indentify to intervals by 1) setting manual threshold, or 2) fitting them into gmm distribution.
 
 
 ### SOFTWARE
