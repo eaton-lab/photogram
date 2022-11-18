@@ -25,7 +25,7 @@ photogrammetry pipeline
 	- scale models based on markers
 
 
-## Detailed notes please refer to the wiki page. 
+## Detailed notes please refer to the [wiki page](https://github.com/yuemeanshappy/photogram/wiki). 
 
 
 
