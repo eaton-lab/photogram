@@ -4,7 +4,7 @@ photogrammetry pipeline
 
 ## Pipeline Overview
 0. Collect a set of images from the same sample
-1. Convert images to .DNG format (optional)
+1. Convert images to .DNG format *(optional)*
 	- command line in bash
 	- OR Adobe DNG Converter (free)
 2. Color correction
