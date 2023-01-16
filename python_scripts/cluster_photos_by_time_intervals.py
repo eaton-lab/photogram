@@ -10,7 +10,7 @@ from argparse import ArgumentParser
 
 
 def get_options():
-    parser = ArgumentParser(usage="cluster_photos.py -i sample_dir -o out_dir",
+    parser = ArgumentParser(usage="cluster_photos_by_time_intervals.py -i sample_dir -o out_dir",
                             description="")
     parser.add_argument("-i", "--input", dest="sample_dir", type=Path,
                         help="The directory that contains all photos of a sample.")
