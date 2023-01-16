@@ -28,6 +28,8 @@ photogrammetry pipeline
 	- build texture
 	- scale models based on markers
 
+### Final outputs
+Some *Pedicularis* floral [3D models](https://sketchfab.com/yuemeanshappy)
 
 ## Detailed notes please refer to the [wiki page](https://github.com/yuemeanshappy/photogram/wiki). 
 
